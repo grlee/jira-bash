@@ -103,50 +103,54 @@ check_dependencies
 
 # Configuration paths
 readonly CONFIG_DIR="${HOME}/.config/jira-cli"
-readonly CONFIG_FILE="${CONFIG_DIR}/config.sh"
+readonly PROJECT_CONFIG_FILE=".jira-config.ini"
 readonly CREDENTIALS_FILE="${CONFIG_DIR}/credentials"
 
 # Default settings
-DEFAULT_PROJECT="KAN"
 DEFAULT_LIMIT=10
 DEFAULT_TYPE="Task"
 DEFAULT_PRIORITY="Medium"
-DEFAULT_JIRA_URL="https://jira.example.com"
 DEFAULT_JIRA_API_VERSION="3"
 DRY_RUN=false
 VERBOSE=false
 OUTPUT_FORMAT="default"
+# JIRA_URL and PROJECT must be set in project config
 
-# Create a default configuration file
-function create_default_config() {
-    mkdir -p "${CONFIG_DIR}" 2>/dev/null || true
+# Create a project configuration file
+function create_project_config() {
+    # Get the current directory name as default project key
+    local current_dir=$(basename "$(pwd)")
+    local project_key=${current_dir^^} # Convert to uppercase for JIRA project key
     
-    cat > "${CONFIG_FILE}" << EOL
-# jira-cli configuration file
-# Modify these settings to match your Jira instance
+    cat > "${PROJECT_CONFIG_FILE}" << EOL
+; jira-cli project configuration file
+; This file configures jira-cli for the current project
 
-# Jira URL (without trailing slash)
-JIRA_URL="${DEFAULT_JIRA_URL}"
+[jira]
+; REQUIRED: Jira URL (without trailing slash)
+url=
 
-# Jira API version
-JIRA_API_VERSION="${DEFAULT_JIRA_API_VERSION}"
+; REQUIRED: Project key
+project=${project_key}
 
-# Default project 
-DEFAULT_PROJECT="${DEFAULT_PROJECT}"
+; Jira API version
+api_version=${DEFAULT_JIRA_API_VERSION}
 
-# Default limit for listing tickets
-DEFAULT_LIMIT=${DEFAULT_LIMIT}
+[defaults]
+; Default limit for listing tickets
+limit=${DEFAULT_LIMIT}
 
-# Default issue type
-DEFAULT_TYPE="${DEFAULT_TYPE}"
+; Default issue type
+type=${DEFAULT_TYPE}
 
-# Default priority
-DEFAULT_PRIORITY="${DEFAULT_PRIORITY}"
+; Default priority
+priority=${DEFAULT_PRIORITY}
 EOL
-    chmod 600 "${CONFIG_FILE}"  # Secure file with credentials
+    chmod 600 "${PROJECT_CONFIG_FILE}"  # Secure file with credentials
     
-    echo "Created default configuration file at ${CONFIG_FILE}"
-    echo "Please edit this file to set your Jira URL and other preferences"
+    echo "Created project configuration file at $(pwd)/${PROJECT_CONFIG_FILE}"
+    echo "Please edit this file to set your Jira URL and other project-specific settings"
+    echo "IMPORTANT: You MUST set the url value in the [jira] section"
 }
 
 # Initialize Jira configuration
@@ -174,9 +178,10 @@ function initialize_jira_config() {
     fi
 }
 
-# Configure Jira settings command
-function configure_jira() {
-    initialize_jira_config
+# Initialize project with Jira settings
+function init_project() {
+    # Create project configuration file
+    create_project_config
     
     # Check credentials
     if [ ! -f "${CREDENTIALS_FILE}" ] || [ ! -s "${CREDENTIALS_FILE}" ]; then
@@ -197,55 +202,74 @@ function configure_jira() {
         fi
     fi
     
-    echo "Jira configuration complete."
+    echo "Project initialization complete."
+    echo "Please edit ${PROJECT_CONFIG_FILE} to set your Jira URL and project-specific settings."
 }
 
-# Prompt user for initial configuration
-function prompt_for_initial_config() {
-    if [[ "$1" != "-h" && "$1" != "--help" && "$1" != "config" ]]; then
-        echo ""
-        echo "Would you like to configure Jira settings now? (y/n)"
-        read -r setup_now
-        
-        if [[ "$setup_now" == "y" || "$setup_now" == "Y" ]]; then
-            configure_jira
-        else
-            echo "You can configure settings later with: $SCRIPT_NAME config"
-        fi
-    fi
-}
+# Function is no longer needed - project initialization is now a separate command
 
 # Check for default settings and warn user
 function check_default_settings() {
-    if [[ "${JIRA_URL:-$DEFAULT_JIRA_URL}" == "$DEFAULT_JIRA_URL" && "$1" != "-h" && "$1" != "--help" && "$1" != "config" ]]; then
-        echo "Warning: You are using the default Jira URL (${JIRA_URL:-$DEFAULT_JIRA_URL})"
-        echo "Please run '$SCRIPT_NAME config' to set up your Jira instance"
-        
-        # If this is not a dry run, we should exit to prevent mistakes
-        if [[ "$DRY_RUN" != "true" ]]; then
-            echo "For safety, this command will not run with default settings unless in dry-run mode."
-            echo "Use --dry-run to test commands with default settings."
-            echo "Or configure your Jira instance with: $SCRIPT_NAME config"
-            exit 1
-        fi
+    if [[ -z "${JIRA_URL}" && "$1" != "-h" && "$1" != "--help" && "$1" != "init" ]]; then
+        echo "Error: JIRA_URL is not set in your project configuration."
+        echo "Please edit $(pwd)/${PROJECT_CONFIG_FILE} to set your Jira URL."
+        exit 1
+    fi
+}
+
+# Function to check if we're in a project with JIRA config
+function find_project_config() {
+    if [ -f "${PROJECT_CONFIG_FILE}" ]; then
+        verbose "Found project config file in current directory"
+        return 0
+    fi
+    
+    verbose "No project config file found in current directory"
+    return 1
+}
+
+# Function to read a value from INI file
+function read_ini() {
+    local file="$1"
+    local section="$2"
+    local key="$3"
+    local default_val="${4:-}"
+    
+    # Use grep to find the section and key
+    local val=$(grep -A 20 "^\[${section}\]" "$file" | grep -m 1 "^${key}=" | cut -d'=' -f2-)
+    
+    # Return the value, or default if not found
+    if [ -n "$val" ]; then
+        echo "$val"
+    else
+        echo "$default_val"
     fi
 }
 
 # Load configuration
 function load_config() {
-    # Create config directory if it doesn't exist
+    # Create credentials directory if it doesn't exist
     mkdir -p "${CONFIG_DIR}" 2>/dev/null || true
     
-    # Load configuration file if it exists
-    if [ -f "${CONFIG_FILE}" ]; then
-        # shellcheck source=/dev/null
-        source "${CONFIG_FILE}"
+    # Try to load project-specific configuration
+    if find_project_config; then
+        verbose "Loading project configuration from ${PROJECT_CONFIG_FILE}"
+        
+        # Read configuration values from INI file
+        JIRA_URL=$(read_ini "${PROJECT_CONFIG_FILE}" "jira" "url")
+        PROJECT=$(read_ini "${PROJECT_CONFIG_FILE}" "jira" "project")
+        JIRA_API_VERSION=$(read_ini "${PROJECT_CONFIG_FILE}" "jira" "api_version" "${DEFAULT_JIRA_API_VERSION}")
+        DEFAULT_LIMIT=$(read_ini "${PROJECT_CONFIG_FILE}" "defaults" "limit" "${DEFAULT_LIMIT}")
+        DEFAULT_TYPE=$(read_ini "${PROJECT_CONFIG_FILE}" "defaults" "type" "${DEFAULT_TYPE}")
+        DEFAULT_PRIORITY=$(read_ini "${PROJECT_CONFIG_FILE}" "defaults" "priority" "${DEFAULT_PRIORITY}")
     else
-        create_default_config
-        prompt_for_initial_config "$@"
+        if [[ "$1" != "init" && "$1" != "-h" && "$1" != "--help" ]]; then
+            echo "Error: No project configuration found in the current directory."
+            echo "You need to initialize a project configuration first."
+            echo "Run '${SCRIPT_NAME} init' to create a project configuration file."
+            exit 1
+        fi
     fi
-    
-    check_default_settings "$@"
 }
 
 # Initialize configuration
@@ -271,6 +295,7 @@ function show_help() {
     echo "  $SCRIPT_NAME [command] [options]"
     echo ""
     echo "Commands:"
+    echo "  init                   Initialize a project with Jira configuration"
     echo "  list                   List tickets (default command)"
     echo "  view <ticket-id>       View details of a specific ticket"
     echo "  create                 Create a new ticket"
@@ -279,7 +304,6 @@ function show_help() {
     echo "  assign <ticket-id>     Assign a ticket to someone"
     echo "  sprint <subcommand>    Manage sprints (list|view|create|start|add|close)"
     echo "  epic <subcommand>      Manage epics (list|view|create|add)"
-    echo "  config                 Configure Jira settings"
     echo ""
     echo "Options:"
     echo "  -h, --help             Show this help message"
@@ -326,7 +350,7 @@ function show_examples() {
     echo "  $SCRIPT_NAME epic add KAN-42 KAN-100   # Add ticket to epic"
     echo ""
     echo "Basic Command Examples:"
-    echo "  $SCRIPT_NAME config                      # Configure Jira settings"
+    echo "  $SCRIPT_NAME init                        # Initialize project Jira configuration"
     echo "  $SCRIPT_NAME list                        # List 10 most recent tickets"
     echo "  $SCRIPT_NAME list --limit 20             # List 20 tickets"
     echo "  $SCRIPT_NAME list --query \"status = Done\" # List tickets with status Done"
@@ -340,8 +364,7 @@ function show_examples() {
     echo "  $SCRIPT_NAME list --verbose              # Show login and API details"
     echo ""
     echo "Configuration:"
-    echo "  Configuration is stored in: ${CONFIG_DIR}/"
-    echo "  Edit ${CONFIG_FILE} to change default settings"
+    echo "  Project configuration is stored in: .jira-config.sh in each project directory"
     echo "  Credentials are stored securely in ${CREDENTIALS_FILE}"
     echo ""
 }
@@ -562,9 +585,9 @@ function parse_args() {
     # Set default command
     COMMAND="list"
     
-    # Check if the first argument is 'config' and handle it specially
-    if [ "$1" = "config" ]; then
-        COMMAND="config"
+    # Check if the first argument is 'init' and handle it specially
+    if [ "$1" = "init" ]; then
+        COMMAND="init"
         return
     fi
     
@@ -1518,11 +1541,17 @@ function process_command() {
         verbose "With ticket ID: $TICKET_ID"
     fi
     
+    # Handle init command separately since it doesn't need a config file
+    if [[ "$COMMAND" == "init" ]]; then
+        init_project
+        return
+    fi
+    
     # Skip login for commands that don't need Jira API access
-    if [[ "$COMMAND" != "help" && "$COMMAND" != "config" && "$COMMAND" != "-h" && "$COMMAND" != "--help" ]]; then
+    if [[ "$COMMAND" != "help" && "$COMMAND" != "-h" && "$COMMAND" != "--help" ]]; then
         # Login to acli before executing commands
         login_to_acli || {
-            echo "Failed to authenticate with Jira. Please run '$SCRIPT_NAME config' to set up credentials."
+            echo "Failed to authenticate with Jira. Please check your credentials."
             if ! $DRY_RUN; then
                 exit 1
             else
@@ -1532,7 +1561,6 @@ function process_command() {
     fi
     
     case "$COMMAND" in
-        config)      configure_jira ;;
         list)        list_tickets ;;
         view)        
             if [ -z "$TICKET_ID" ]; then

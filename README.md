@@ -33,9 +33,10 @@ A powerful Bash CLI wrapper for Jira that provides comprehensive terminal-based 
    mv jira.sh ~/bin/jira  # Ensure ~/bin is in your PATH
    ```
 
-3. First-time configuration:
+3. Initialize your project:
    ```bash
-   jira config
+   cd /path/to/your/project
+   jira init
    ```
 
 Alternatively, use the installer script:
@@ -115,12 +116,33 @@ jira epic add PROJECT-123 PROJECT-100
 
 ## Configuration
 
-The script stores configuration in `~/.config/jira-cli/`:
+Jira-Bash uses per-project configuration, which allows each project to connect to its own specific Jira instance.
 
-- `config.sh`: Contains your Jira URL, default project, and other preferences
-- `credentials`: Securely stores your Jira username and API token
+### Project Configuration
 
-You can edit these files directly or run `jira config` for guided setup.
+Each project has its own configuration file in the project's root directory:
+
+- `.jira-config.ini`: Contains project-specific settings including:
+  - Jira URL for this project
+  - Project key
+  - Default options like issue type and priority
+
+### Credentials
+
+Credentials are stored centrally to avoid duplicating sensitive information:
+
+- `~/.config/jira-cli/credentials`: Securely stores your Jira username and API token
+
+### Setting Up a New Project
+
+To initialize a new project with jira-bash:
+
+```bash
+cd /path/to/your/project
+jira init
+```
+
+This creates a `.jira-config.ini` file in your project directory that you'll need to edit to set your specific Jira URL.
 
 ## Documentation
 

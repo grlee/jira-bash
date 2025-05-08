@@ -89,4 +89,6 @@ chmod +x "$INSTALL_DIR/$INSTALL_NAME" || { echo "Error: Failed to make script ex
 echo
 echo "Installation successful!"
 echo "You can now run the jira command from the terminal."
-echo "Run 'jira config' to configure your Jira settings."
+echo "To use with a project, navigate to your project directory and run:"
+echo "  jira init"
+echo "This will create a project-specific configuration file."

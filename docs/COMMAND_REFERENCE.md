@@ -15,13 +15,13 @@ These options can be used with any command:
 
 ## Basic Commands
 
-### Configuration
+### Project Initialization
 
 ```bash
-jira config
+jira init
 ```
 
-Interactively configures your Jira settings, including URL, project, and authentication details.
+Initializes the current directory as a Jira project by creating a `.jira-config.ini` file. This file contains project-specific settings, including the Jira URL and project key.
 
 ### Listing Tickets
 
@@ -291,16 +291,30 @@ Examples:
 jira epic add PROJ-123 PROJ-100
 ```
 
+## Configuration Files
+
+### Project Configuration
+
+Each project has its own configuration file:
+
+- `.jira-config.ini`: Contains project-specific settings for the current directory:
+  - `url`: The URL of the Jira instance for this project (in [jira] section)
+  - `project`: The Jira project key for this project (in [jira] section)
+  - Other default settings like issue type and priority
+
+### Credentials
+
+Credentials are stored in a central location to avoid duplication:
+
+- `~/.config/jira-cli/credentials`: Securely stores your Jira username and API token
+
 ## Environment Variables
 
-The script respects these environment variables:
+The script respects these environment variables (which override config file settings):
 
-- `JIRA_URL`: Override the URL in config file
-- `JIRA_PROJECT`: Override default project in config file
-- `JIRA_API_VERSION`: Override API version in config file
 - `JIRA_CLI_VERBOSE`: Set to "true" to enable verbose mode
 
 Example:
 ```bash
-JIRA_URL=https://your-instance.atlassian.net JIRA_PROJECT=NEWPROJ jira list
+JIRA_CLI_VERBOSE=true jira list
 ```
