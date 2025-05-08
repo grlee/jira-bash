@@ -38,6 +38,11 @@ A powerful Bash CLI wrapper for Jira that provides comprehensive terminal-based 
    jira config
    ```
 
+Alternatively, use the installer script:
+```bash
+./install.sh
+```
+
 ## Usage
 
 ### Basic Commands
@@ -117,12 +122,26 @@ The script stores configuration in `~/.config/jira-cli/`:
 
 You can edit these files directly or run `jira config` for guided setup.
 
-## Comparison with Alternatives
+## Documentation
 
-- **jira-bash**: Simple, single-file Bash script with excellent sprint and epic support
-- **go-jira**: More developer-focused with extensive filtering capabilities
-- **jira-cli**: Official Atlassian tool with cloud and server support
-- **jirash**: More customizable but requires more setup
+For more detailed documentation, see:
+
+- [Command Reference](docs/COMMAND_REFERENCE.md) - Detailed usage for all commands
+- [Platform Compatibility](docs/PLATFORM_COMPATIBILITY.md) - Notes for different operating systems
+- [Alternatives Comparison](docs/ALTERNATIVES.md) - How jira-bash compares to other tools
+- [Project Status](docs/PROJECT_STATUS.md) - Current status and roadmap
+
+## Contributing
+
+Contributions are welcome! Please check out our [Contributing Guide](CONTRIBUTING.md) for more information.
+
+## Testing
+
+Run the included test script to verify functionality:
+
+```bash
+./test.sh
+```
 
 ## License
 

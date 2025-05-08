@@ -1,1 +1,24 @@
-**/.claude/settings.local.json
+# User-specific configuration
+.config/
+
+# Temporary files
+*.tmp
+*~
+.*.swp
+.DS_Store
+
+# Local environment files
+.env
+.env.local
+
+# Logs
+*.log
+
+# Build artifacts
+/dist/
+/build/
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-*
