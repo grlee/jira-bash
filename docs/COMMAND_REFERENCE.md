@@ -300,7 +300,21 @@ Each project has its own configuration file:
 - `.jira-config.ini`: Contains project-specific settings for the current directory:
   - `url`: The URL of the Jira instance for this project (in [jira] section)
   - `project`: The Jira project key for this project (in [jira] section)
-  - Other default settings like issue type and priority
+  - `api_version`: The Jira API version to use (in [jira] section)
+  - Default settings like issue type, limit, and priority (in [defaults] section)
+
+Example configuration:
+```ini
+[jira]
+url=https://your-company.atlassian.net
+project=PROJECTKEY
+api_version=3
+
+[defaults]
+limit=10
+type=Task
+priority=Medium
+```
 
 ### Credentials
 

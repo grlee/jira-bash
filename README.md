@@ -28,9 +28,17 @@ A powerful Bash CLI wrapper for Jira that provides comprehensive terminal-based 
 
 2. Move to a directory in your PATH:
    ```bash
+   # System-wide installation (requires sudo):
    sudo mv jira.sh /usr/local/bin/jira
-   # Or locally:
-   mv jira.sh ~/bin/jira  # Ensure ~/bin is in your PATH
+   
+   # Or user-specific installation:
+   mkdir -p ~/.local/bin  # Create directory if it doesn't exist
+   mv jira.sh ~/.local/bin/jira
+   chmod +x ~/.local/bin/jira
+   
+   # Make sure the directory is in your PATH:
+   # Add this to your ~/.bashrc or ~/.zshrc if needed:
+   # export PATH="$PATH:$HOME/.local/bin"
    ```
 
 3. Initialize your project:
