@@ -23,3 +23,5 @@
 .vscode/
 *.sublime-*
 **/.claude/settings.local.json
+.jira-config.ini
+test
