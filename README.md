@@ -29,12 +29,12 @@ A powerful Bash CLI wrapper for Jira that provides comprehensive terminal-based 
 2. Move to a directory in your PATH:
    ```bash
    # System-wide installation (requires sudo):
-   sudo mv jira.sh /usr/local/bin/jira
+   sudo mv jira.sh /usr/local/bin/jira-bash
    
    # Or user-specific installation:
    mkdir -p ~/.local/bin  # Create directory if it doesn't exist
-   mv jira.sh ~/.local/bin/jira
-   chmod +x ~/.local/bin/jira
+   mv jira.sh ~/.local/bin/jira-bash
+   chmod +x ~/.local/bin/jira-bash
    
    # Make sure the directory is in your PATH:
    # Add this to your ~/.bashrc or ~/.zshrc if needed:
@@ -44,7 +44,7 @@ A powerful Bash CLI wrapper for Jira that provides comprehensive terminal-based 
 3. Initialize your project:
    ```bash
    cd /path/to/your/project
-   jira init
+   jira-bash init
    ```
 
 Alternatively, use the installer script:
@@ -58,60 +58,60 @@ Alternatively, use the installer script:
 
 ```bash
 # List your recent tickets
-jira list
+jira-bash list
 
 # View details of a specific ticket
-jira view PROJECT-123
+jira-bash view PROJECT-123
 
 # Create a new ticket
-jira create --summary "Fix login issue" --description "Users cannot log in from Firefox"
+jira-bash create --summary "Fix login issue" --description "Users cannot log in from Firefox"
 
 # Add a comment to a ticket
-jira comment PROJECT-123 "This has been fixed in the latest release"
+jira-bash comment PROJECT-123 "This has been fixed in the latest release"
 
 # Change a ticket's status
-jira transition PROJECT-123 "Done"
+jira-bash transition PROJECT-123 "Done"
 
 # Assign a ticket
-jira assign PROJECT-123 --assignee "user@example.com"
+jira-bash assign PROJECT-123 --assignee "user@example.com"
 ```
 
 ### Sprint Management
 
 ```bash
 # List all sprints
-jira sprint list
+jira-bash sprint list
 
 # View sprint details
-jira sprint view 42
+jira-bash sprint view 42
 
 # Create a new sprint
-jira sprint create "Sprint 7" --start-date 2025-06-01 --end-date 2025-06-15 --goal "Implement OAuth"
+jira-bash sprint create "Sprint 7" --start-date 2025-06-01 --end-date 2025-06-15 --goal "Implement OAuth"
 
 # Start a sprint
-jira sprint start 42
+jira-bash sprint start 42
 
 # Add a ticket to a sprint
-jira sprint add PROJECT-123 42
+jira-bash sprint add PROJECT-123 42
 
 # Close a sprint
-jira sprint close 42
+jira-bash sprint close 42
 ```
 
 ### Epic Management
 
 ```bash
 # List all epics
-jira epic list
+jira-bash epic list
 
 # View epic details and child issues
-jira epic view PROJECT-100
+jira-bash epic view PROJECT-100
 
 # Create a new epic
-jira epic create "User Authentication Overhaul"
+jira-bash epic create "User Authentication Overhaul"
 
 # Add a ticket to an epic
-jira epic add PROJECT-123 PROJECT-100
+jira-bash epic add PROJECT-123 PROJECT-100
 ```
 
 ### Global Options
@@ -147,7 +147,7 @@ To initialize a new project with jira-bash:
 
 ```bash
 cd /path/to/your/project
-jira init
+jira-bash init
 ```
 
 This creates a `.jira-config.ini` file in your project directory that you'll need to edit to set your specific Jira URL.

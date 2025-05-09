@@ -9,7 +9,7 @@ set -e
 # Script constants
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_NAME="jira.sh"
-INSTALL_NAME="jira"
+INSTALL_NAME="jira-bash"
 
 # Welcome message
 echo "======================================="
@@ -129,7 +129,7 @@ fi
 
 echo
 echo "Installation successful!"
-echo "You can now run the jira command from the terminal."
+echo "You can now run the jira-bash command from the terminal."
 echo "To use with a project, navigate to your project directory and run:"
-echo "  jira init"
+echo "  jira-bash init"
 echo "This will create a project-specific configuration file."
