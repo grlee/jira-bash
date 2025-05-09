@@ -61,12 +61,38 @@ else
     mkdir -p "$DEFAULT_INSTALL_DIR"
 fi
 
-# Get user input for install directory
+# Get user input for install location
 echo
 echo "Detected operating system: $OS_NAME"
 echo "Default installation directory: $DEFAULT_INSTALL_DIR"
-read -p "Install directory [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR
-INSTALL_DIR="${INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+echo
+echo "Installation options:"
+echo "  1) Global installation ($DEFAULT_INSTALL_DIR) - requires sudo on most systems"
+echo "  2) Local installation (~/.local/bin) - user-specific installation"
+echo "  3) Custom directory"
+echo
+read -p "Select installation option [2]: " INSTALL_OPTION
+INSTALL_OPTION="${INSTALL_OPTION:-2}"
+
+case "$INSTALL_OPTION" in
+    1)
+        INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+        ;;
+    2)
+        INSTALL_DIR="$HOME/.local/bin"
+        # Create .local/bin if it doesn't exist
+        mkdir -p "$INSTALL_DIR"
+        ;;
+    3)
+        read -p "Enter custom install directory: " CUSTOM_DIR
+        INSTALL_DIR="${CUSTOM_DIR:-$DEFAULT_INSTALL_DIR}"
+        ;;
+    *)
+        echo "Invalid option. Using default local installation directory."
+        INSTALL_DIR="$HOME/.local/bin"
+        mkdir -p "$INSTALL_DIR"
+        ;;
+esac
 
 # Create install directory if it doesn't exist
 if [ ! -d "$INSTALL_DIR" ]; then
@@ -77,14 +103,29 @@ fi
 # Check if install directory is in PATH
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     echo "Warning: $INSTALL_DIR is not in your PATH."
-    echo "Add the following line to your ~/.bashrc, ~/.zshrc or equivalent:"
-    echo "  export PATH=\"\$PATH:$INSTALL_DIR\""
+    
+    # Different message based on installation option
+    if [[ "$INSTALL_DIR" == "$HOME/.local/bin" ]]; then
+        echo "For local installation (~/.local/bin), add the following line to your ~/.bashrc, ~/.zshrc or equivalent:"
+        echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+    else
+        echo "Add the following line to your ~/.bashrc, ~/.zshrc or equivalent:"
+        echo "  export PATH=\"\$PATH:$INSTALL_DIR\""
+    fi
 fi
 
 # Install the script
 echo "Installing jira-bash to $INSTALL_DIR/$INSTALL_NAME..."
-cp "$SCRIPT_DIR/$SCRIPT_NAME" "$INSTALL_DIR/$INSTALL_NAME" || { echo "Error: Failed to copy script"; exit 1; }
-chmod +x "$INSTALL_DIR/$INSTALL_NAME" || { echo "Error: Failed to make script executable"; exit 1; }
+
+# Check if we need sudo for global installation
+if [[ "$INSTALL_OPTION" == "1" && "$INSTALL_DIR" == "/usr/local/bin" && ! -w "$INSTALL_DIR" ]]; then
+    echo "Global installation requires sudo privileges."
+    sudo cp "$SCRIPT_DIR/$SCRIPT_NAME" "$INSTALL_DIR/$INSTALL_NAME" || { echo "Error: Failed to copy script"; exit 1; }
+    sudo chmod +x "$INSTALL_DIR/$INSTALL_NAME" || { echo "Error: Failed to make script executable"; exit 1; }
+else
+    cp "$SCRIPT_DIR/$SCRIPT_NAME" "$INSTALL_DIR/$INSTALL_NAME" || { echo "Error: Failed to copy script"; exit 1; }
+    chmod +x "$INSTALL_DIR/$INSTALL_NAME" || { echo "Error: Failed to make script executable"; exit 1; }
+fi
 
 echo
 echo "Installation successful!"
