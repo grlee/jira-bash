@@ -121,6 +121,7 @@ function create_project_config() {
     # Get the current directory name as default project key
     local current_dir=$(basename "$(pwd)")
     local project_key=${current_dir^^} # Convert to uppercase for JIRA project key
+    local jira_url="$1"  # Get the URL passed from init_project
     
     cat > "${PROJECT_CONFIG_FILE}" << EOL
 ; jira-cli project configuration file
@@ -128,7 +129,7 @@ function create_project_config() {
 
 [jira]
 ; REQUIRED: Jira URL (without trailing slash)
-url=
+url=${jira_url}
 
 ; REQUIRED: Project key
 project=${project_key}
@@ -149,8 +150,11 @@ EOL
     chmod 600 "${PROJECT_CONFIG_FILE}"  # Secure file with credentials
     
     echo "Created project configuration file at $(pwd)/${PROJECT_CONFIG_FILE}"
-    echo "Please edit this file to set your Jira URL and other project-specific settings"
-    echo "IMPORTANT: You MUST set the url value in the [jira] section"
+    if [ -z "$jira_url" ]; then
+        echo "IMPORTANT: You MUST set the url value in the [jira] section"
+    else
+        echo "Jira URL set to: $jira_url"
+    fi
 }
 
 # Initialize Jira configuration
@@ -180,8 +184,26 @@ function initialize_jira_config() {
 
 # Initialize project with Jira settings
 function init_project() {
-    # Create project configuration file
-    create_project_config
+    # Ask for Jira URL before creating config
+    local jira_url=""
+    local valid_url=false
+    
+    while [ "$valid_url" = false ]; do
+        echo "Enter your Jira URL (without trailing slash, e.g., https://your-domain.atlassian.net):"
+        read -r jira_url
+        
+        # Basic URL validation
+        if [[ "$jira_url" =~ ^https?://[a-zA-Z0-9.-]+\.[a-zA-Z][a-zA-Z]+$ ]]; then
+            # Remove trailing slash if present
+            jira_url=${jira_url%/}
+            valid_url=true
+        else
+            echo "Invalid URL format. Please enter a valid URL (e.g., https://your-domain.atlassian.net)"
+        fi
+    done
+    
+    # Create project configuration file with the provided URL
+    create_project_config "$jira_url"
     
     # Check credentials
     if [ ! -f "${CREDENTIALS_FILE}" ] || [ ! -s "${CREDENTIALS_FILE}" ]; then
@@ -203,7 +225,7 @@ function init_project() {
     fi
     
     echo "Project initialization complete."
-    echo "Please edit ${PROJECT_CONFIG_FILE} to set your Jira URL and project-specific settings."
+    echo "Configuration saved to ${PROJECT_CONFIG_FILE}"
 }
 
 # Function is no longer needed - project initialization is now a separate command
